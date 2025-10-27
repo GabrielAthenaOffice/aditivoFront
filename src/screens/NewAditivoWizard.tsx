@@ -1,80 +1,107 @@
+// src/screens/NewAditivoWizard.tsx
 import DashboardLayout from '@/layouts/DashboardLayout'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { TemplateKey } from '@/types'
 import AditivoForm from './components/AditivoForm'
-import { Card, Button } from '@/screens/components/ui'
+import { Card, Button, Toggle } from '@/screens/components/ui'
+
+type Mode = 'contratual' | 'contato'
 
 export default function NewAditivoWizard() {
-  const [step, setStep] = useState<1|2|3>(1)
-  const [tipoContato, setTipoContato] = useState<'email'|'telefone'|null>(null)
-  const [pessoa, setPessoa] = useState<'pf'|'pj'|null>(null)
-  const [contratual, setContratual] = useState<'simples'|'fiadores'|null>(null)
+  const [mode, setMode] = useState<Mode>('contratual')
+  const [pessoa, setPessoa] = useState<'pf' | 'pj' | null>(null)
+  const [tipoContato, setTipoContato] = useState<'email' | 'telefone' | null>(null)
+  const [contratual, setContratual] = useState<'simples' | 'fiadores' | null>(null)
 
-  const getTemplate = (): TemplateKey | null => {
-    if (step===2 && contratual) return contratual === 'fiadores' ? 'ADITIVO_CONTRATUAL_DOIS_FIADORES' : 'ADITIVO_CONTRATUAL'
-    if (step===3 && tipoContato && pessoa) {
-      if (tipoContato==='email' && pessoa==='pf') return 'TROCA_EMAIL_PF'
-      if (tipoContato==='email' && pessoa==='pj') return 'TROCA_EMAIL_PJ'
-      if (tipoContato==='telefone' && pessoa==='pf') return 'TROCA_TEL_PF'
-      if (tipoContato==='telefone' && pessoa==='pj') return 'TROCA_TEL_PJ'
+  // limpa seleções irrelevantes ao trocar de modo
+  useEffect(() => {
+    if (mode === 'contratual') { setTipoContato(null); setPessoa(null) }
+    if (mode === 'contato')    { setContratual(null) }
+  }, [mode])
+
+  const template: TemplateKey | null = useMemo(() => {
+    if (mode === 'contratual') {
+      if (!contratual) return null
+      return contratual === 'fiadores'
+        ? 'ADITIVO_CONTRATUAL_DOIS_FIADORES'
+        : 'ADITIVO_CONTRATUAL'
+    }
+    if (mode === 'contato') {
+      if (!pessoa || !tipoContato) return null
+      if (tipoContato === 'email' && pessoa === 'pf') return 'TROCA_EMAIL_PF'
+      if (tipoContato === 'email' && pessoa === 'pj') return 'TROCA_EMAIL_PJ'
+      if (tipoContato === 'telefone' && pessoa === 'pf') return 'TROCA_TEL_PF'
+      if (tipoContato === 'telefone' && pessoa === 'pj') return 'TROCA_TEL_PJ'
     }
     return null
-  }
-
-  const Step = ({ n, label }: any) =>
-    <div className={`px-3 py-2 rounded-lg border ${step===n ? 'bg-blue-50 border-blue-400 text-blue-700' : 'bg-white text-gray-600'}`}>{label}</div>
+  }, [mode, pessoa, tipoContato, contratual])
 
   return (
     <DashboardLayout>
-      <div className="max-w-4xl mx-auto space-y-4">
-        <div className="flex items-center gap-2 text-sm">
-          <Step n={1} label="Escolha do tipo" />
-          <span>→</span>
-          <Step n={2} label="Contratual" />
-          <span>→</span>
-          <Step n={3} label="Contato" />
+      <div className="max-w-5xl mx-auto space-y-4">
+        {/* Tabs simples de modo */}
+        <div className="flex gap-2">
+          <Toggle active={mode==='contratual'} onClick={()=>setMode('contratual')}>Contratual</Toggle>
+          <Toggle active={mode==='contato'} onClick={()=>setMode('contato')}>Contato</Toggle>
         </div>
 
-        <Card>
-          {step===1 && (
-            <div className="grid md:grid-cols-2 gap-3">
-              <Button onClick={()=>setStep(2)}>Contratual</Button>
-              <Button onClick={()=>setStep(3)} className="bg-gray-800 hover:bg-gray-900">Contato (E-mail/Telefone)</Button>
-            </div>
+        {/* Barra de estado selecionado */}
+        <div className="text-sm text-ink-500">
+          {mode==='contratual' && (
+            <>Modo: <span className="font-medium text-ink-700">Contratual</span>
+              {contratual && <> · Seleção: <span className="badge">{contratual === 'fiadores' ? 'Dois fiadores' : 'Simples'}</span></>}
+            </>
           )}
+          {mode==='contato' && (
+            <>Modo: <span className="font-medium text-ink-700">Contato</span>
+              {pessoa && <> · Pessoa: <span className="badge">{pessoa.toUpperCase()}</span></>}
+              {tipoContato && <> · Tipo: <span className="badge">{tipoContato === 'email' ? 'E-mail' : 'Telefone'}</span></>}
+            </>
+          )}
+        </div>
 
-          {step===2 && (
+        {/* Seções */}
+        {mode==='contratual' && (
+          <Card>
+            <div className="title mb-2">Tipo de contratual</div>
             <div className="flex gap-2">
-              <Button onClick={()=>setContratual('simples')}>Simples</Button>
-              <Button onClick={()=>setContratual('fiadores')}>Dois fiadores</Button>
+              <Toggle active={contratual==='simples'} onClick={()=>setContratual('simples')}>Simples</Toggle>
+              <Toggle active={contratual==='fiadores'} onClick={()=>setContratual('fiadores')}>Dois fiadores</Toggle>
             </div>
-          )}
+          </Card>
+        )}
 
-          {step===3 && (
-            <div className="grid md:grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <div className="text-xs text-gray-500">Tipo de contato</div>
+        {mode==='contato' && (
+          <Card>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <div className="title mb-2">Pessoa</div>
                 <div className="flex gap-2">
-                  <Button onClick={()=>setTipoContato('email')}>E-mail</Button>
-                  <Button onClick={()=>setTipoContato('telefone')}>Telefone</Button>
+                  <Toggle active={pessoa==='pf'} onClick={()=>setPessoa('pf')}>PF</Toggle>
+                  <Toggle active={pessoa==='pj'} onClick={()=>setPessoa('pj')}>PJ</Toggle>
                 </div>
               </div>
-              <div className="space-y-2">
-                <div className="text-xs text-gray-500">Pessoa</div>
+              <div>
+                <div className="title mb-2">Tipo de contato</div>
                 <div className="flex gap-2">
-                  <Button onClick={()=>setPessoa('pf')}>PF</Button>
-                  <Button onClick={()=>setPessoa('pj')}>PJ</Button>
+                  <Toggle active={tipoContato==='email'} onClick={()=>setTipoContato('email')}>E-mail</Toggle>
+                  <Toggle active={tipoContato==='telefone'} onClick={()=>setTipoContato('telefone')}>Telefone</Toggle>
                 </div>
               </div>
             </div>
-          )}
-        </Card>
+          </Card>
+        )}
 
-        {getTemplate() && (
+        {/* Form sempre abaixo; aparece quando tem template */}
+        {template && (
           <Card>
             <h2 className="font-semibold mb-3">Dados do aditivo</h2>
-            <AditivoForm template={getTemplate()!} />
+            <AditivoForm template={template} />
           </Card>
+        )}
+
+        {!template && (
+          <div className="text-sm text-ink-500">Selecione as opções acima para abrir o formulário.</div>
         )}
       </div>
     </DashboardLayout>

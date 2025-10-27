@@ -1,3 +1,5 @@
+// Em src/types.ts
+
 export type TemplateKey =
   | 'TROCA_EMAIL_PF' | 'TROCA_EMAIL_PJ'
   | 'TROCA_TEL_PF'   | 'TROCA_TEL_PJ'
@@ -14,13 +16,28 @@ export interface AditivoRequestDTO {
   socio?: string; socioCpf?: string; socioEndereco?: string;
 }
 
-// Em src/types.ts
 export interface AditivoResponseDTO {
   status: string;
   mensagem: string;
   aditivoId: string;
   caminhoDocumentoDocx: string | null;
-  urlDownload: string; // Nome correto da propriedade
-  // Mantenha downloadUrl como opcional para compatibilidade
-  downloadUrl?: string;
+  urlDownload: string;
+  downloadUrl?: string; // compatibilidade
+}
+
+// CORRETO: Estrutura que vem do backend Java
+export interface AditivoSimple {
+  empresaId: number
+  nomeEmpresa: string
+  status: string
+  aditivoId: string
+}
+
+export interface AditivoPage {
+  content: AditivoSimple[]
+  pageNumber: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+  lastPage: boolean
 }
