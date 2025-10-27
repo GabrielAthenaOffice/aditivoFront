@@ -37,7 +37,7 @@ export default function AditivosAll() {
         {data && (
           <>
             <div className="mt-3">
-              <AditivosTable rows={data.content || []} />
+              <AditivosTable rows={data.content || []} enableDelete />
             </div>
 
             {/* sem paginação quando há filtro por nome */}

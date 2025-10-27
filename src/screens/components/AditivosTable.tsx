@@ -1,7 +1,7 @@
 // src/screens/components/AditivosTable.tsx
 import { AditivoSimple } from '@/types'
 import { ADITIVOS_DOWNLOAD } from '@/constants'
-import { useDeleteAditivo } from '@/hooks/useAditivo'
+import { useDeleteAditivo } from '@/hooks/useAditivo' // ← singular
 import { Trash2 } from 'lucide-react'
 
 const buildDownloadUrl = (id: string): string => {
