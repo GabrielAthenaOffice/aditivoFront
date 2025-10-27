@@ -1,8 +1,8 @@
-// ========================================
 // src/screens/components/AditivosTable.tsx
-// ========================================
 import { AditivoSimple } from '@/types'
 import { ADITIVOS_DOWNLOAD } from '@/constants'
+import { useDeleteAditivo } from '@/hooks/useAditivo'
+import { Trash2 } from 'lucide-react'
 
 const buildDownloadUrl = (id: string): string => {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
@@ -12,7 +12,22 @@ const buildDownloadUrl = (id: string): string => {
   return `${cleanBaseUrl}${cleanPath}`
 }
 
-export default function AditivosTable({ rows }: { rows: AditivoSimple[] }) {
+export default function AditivosTable({
+  rows,
+  enableDelete = false,
+}: {
+  rows: AditivoSimple[]
+  enableDelete?: boolean
+}) {
+  const del = useDeleteAditivo()
+
+  const onDelete = (id: string) => {
+    if (!id) return
+    const ok = window.confirm('Remover este aditivo? Essa ação não pode ser desfeita.')
+    if (!ok) return
+    del.mutate(id)
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full text-sm">
@@ -33,15 +48,14 @@ export default function AditivosTable({ rows }: { rows: AditivoSimple[] }) {
               </td>
             </tr>
           )}
+
           {rows.map((r) => (
             <tr key={r.aditivoId} className="[&>td]:py-2 [&>td]:px-2">
-              <td className="font-medium">{r.empresaId}</td>
+              <td className="font-medium">{r.empresaId ?? '—'}</td>
               <td>{r.nomeEmpresa || '—'}</td>
-              <td>
-                <span className="badge">{r.status || '—'}</span>
-              </td>
-              <td className="text-xs text-ink-500">{r.aditivoId}</td>
-              <td className="text-right">
+              <td><span className="badge">{r.status || '—'}</span></td>
+              <td className="text-xs text-ink-500">{r.aditivoId || '—'}</td>
+              <td className="text-right flex items-center justify-end gap-2">
                 <a
                   className="btn"
                   href={buildDownloadUrl(r.aditivoId)}
@@ -50,6 +64,20 @@ export default function AditivosTable({ rows }: { rows: AditivoSimple[] }) {
                 >
                   Baixar
                 </a>
+
+                {enableDelete && (
+                  <button
+                    type="button"
+                    className="btn-danger inline-flex items-center gap-1"
+                    onClick={() => onDelete(r.aditivoId)}
+                    disabled={del.isPending}
+                    aria-label="Excluir aditivo"
+                    title="Excluir"
+                  >
+                    <Trash2 size={16} />
+                    Excluir
+                  </button>
+                )}
               </td>
             </tr>
           ))}

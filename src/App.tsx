@@ -1,6 +1,3 @@
-// ========================================
-// src/App.tsx
-// ========================================
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import DashboardLayout from './layouts/DashboardLayout'
@@ -10,8 +7,14 @@ import { useAditivos } from '@/hooks/useAditivo'
 
 export default function App() {
   const [page, setPage] = useState(0)
-  const [size, setSize] = useState(10) // padrão 10
+  const [size, setSize] = useState(10)
+
   const { data, isLoading, isError } = useAditivos({ page, size })
+
+  const rows = Array.isArray(data?.content) ? data!.content : []
+  const pageNumber     = Number.isFinite(data?.pageNumber)   ? data!.pageNumber   : 0
+  const totalPages     = Number.isFinite(data?.totalPages)    ? data!.totalPages   : 1
+  const totalElements  = Number.isFinite(data?.totalElements) ? data!.totalElements: 0
 
   return (
     <DashboardLayout>
@@ -43,22 +46,24 @@ export default function App() {
         </div>
 
         {isLoading && <p className="text-sm text-ink-500 mt-2">Carregando…</p>}
-        {isError && <p className="text-sm text-red-600 mt-2">Erro ao carregar.</p>}
+        {isError &&   <p className="text-sm text-red-600 mt-2">Erro ao carregar.</p>}
 
-        {data && (
+        {!isLoading && !isError && (
           <>
             <div className="mt-3">
-              <AditivosTable rows={data.content || []} />
+              <AditivosTable rows={rows} />
             </div>
 
-            <Pagination
-              page={data.pageNumber}
-              pageSize={size}
-              totalPages={data.totalPages}
-              totalElements={data.totalElements}
-              onPageChange={(p) => setPage(p)}
-              onPageSizeChange={(s) => { setPage(0); setSize(s) }}
-            />
+            {rows.length > 0 && (
+              <Pagination
+                page={pageNumber}
+                pageSize={size}
+                totalPages={totalPages}
+                totalElements={totalElements}
+                onPageChange={(p) => setPage(p)}
+                onPageSizeChange={(s) => { setPage(0); setSize(s) }}
+              />
+            )}
           </>
         )}
       </div>

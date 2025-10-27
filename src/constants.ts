@@ -14,3 +14,5 @@ export const ENDPOINTS: Record<TemplateKey, string> = {
 export const ADITIVOS_LIST = '/aditivos/empresa/todas-as-empresas'
 export const ADITIVOS_SEARCH_BY_NOME = (nome: string) => `/aditivos/empresa/nome/${encodeURIComponent(nome)}`
 export const ADITIVOS_DOWNLOAD = (id: string) => `/aditivos/${id}/download`
+export const ADITIVOS_DELETE = (id: string) =>
+  `/aditivos/empresa/deletar-aditivo/${id}`;
