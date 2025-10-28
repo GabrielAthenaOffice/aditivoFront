@@ -41,3 +41,23 @@ export interface AditivoPage {
   totalPages: number
   lastPage: boolean
 }
+
+
+// --- HISTÓRICO ---
+export type HistoricoItem = {
+  id: string
+  empresaId: string
+  empresaNome: string
+  aditivoId: string
+  status: string
+  mensagem: string
+}
+
+export type HistoricoPage = {
+  content: HistoricoItem[]
+  pageNumber: number
+  pageSize: number
+  totalElements: number
+  totalPages: number
+  lastPage: boolean
+}

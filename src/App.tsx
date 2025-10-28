@@ -35,7 +35,7 @@ export default function App() {
 
         <div className="section">
           <div className="title">Status do sistema</div>
-          <div className="mt-3"><span className="badge">Tudo ok</span></div>
+          <div className="mt-3"><span className="badge">Tudo ok ✅</span></div>
         </div>
       </div>
 

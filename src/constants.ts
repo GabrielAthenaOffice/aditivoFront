@@ -16,3 +16,6 @@ export const ADITIVOS_SEARCH_BY_NOME = (nome: string) => `/aditivos/empresa/nome
 export const ADITIVOS_DOWNLOAD = (id: string) => `/aditivos/${id}/download`
 export const ADITIVOS_DELETE = (id: string) =>
   `/aditivos/empresa/deletar-aditivo/${id}`;
+
+export const HIST_LIST = '/aditivos/historico'
+export const HIST_SEARCH_BY_NOME = (nome: string) => `/aditivos/historico/empresa/nome/${nome}`
