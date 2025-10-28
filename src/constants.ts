@@ -19,3 +19,8 @@ export const ADITIVOS_DELETE = (id: string) =>
 
 export const HIST_LIST = '/aditivos/historico'
 export const HIST_SEARCH_BY_NOME = (nome: string) => `/aditivos/historico/empresa/nome/${nome}`
+
+// + adicione
+export const UNIDADES_LIST = '/unidades'
+export const UNIDADE_BY_NOME = (nome: string) =>
+  `/unidades/${encodeURIComponent(nome)}`

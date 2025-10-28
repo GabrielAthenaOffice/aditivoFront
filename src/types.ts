@@ -61,3 +61,11 @@ export type HistoricoPage = {
   totalPages: number
   lastPage: boolean
 }
+
+// + adicione
+export type UnidadeDTO = {
+  nome: string
+  cnpj: string
+  endereco: string
+}
+
