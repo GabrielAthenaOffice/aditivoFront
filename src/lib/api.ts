@@ -7,31 +7,16 @@ const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 export const api = axios.create({
   baseURL,
-  withCredentials: false,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+  withCredentials: true,            // <- LIGA ISSO
+  headers: { 'Content-Type': 'application/json' },
 })
 
-// Interceptor para logs de debug (remover em produção)
-api.interceptors.request.use(
-  (config) => {
-    console.log(`🔵 REQUEST: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.params)
-    return config
-  },
-  (error) => {
-    console.error('❌ REQUEST ERROR:', error)
-    return Promise.reject(error)
-  }
-)
-
+// (opcional) logs – cuidado pra não vazar dados em prod
+api.interceptors.request.use((config) => {
+  console.log(`🔵 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, config.params)
+  return config
+})
 api.interceptors.response.use(
-  (response) => {
-    console.log(`🟢 RESPONSE: ${response.config.url}`, response.data)
-    return response
-  },
-  (error) => {
-    console.error('❌ RESPONSE ERROR:', error.response?.data || error.message)
-    return Promise.reject(error)
-  }
+  (res) => { console.log(`🟢 ${res.config.url}`, res.data); return res },
+  (err) => { console.error('❌', err.response?.data || err.message); return Promise.reject(err) }
 )
