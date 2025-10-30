@@ -9,7 +9,6 @@ const baseURL = 'https://api-aditivo.onrender.com';
 export const api = axios.create({
   baseURL,
   withCredentials: true,            // <- LIGA ISSO
-  headers: { 'Content-Type': 'application/json' },
 })
 
 // (opcional) logs – cuidado pra não vazar dados em prod
