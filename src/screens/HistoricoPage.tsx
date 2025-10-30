@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { SetStateAction, useEffect, useState } from 'react'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import { useHistorico } from '@/hooks/useHistorico'
 import HistoricoTable from '@/screens/components/HistoricoTable'
@@ -34,7 +34,7 @@ export default function HistoricoPage() {
               type="text"
               placeholder="Buscar por nome da empresa…"
               value={filtroInput}
-              onChange={(e) => setFiltroInput(e.target.value)}
+              onChange={(e: { target: { value: SetStateAction<string> } }) => setFiltroInput(e.target.value)}
             />
           </div>
 
