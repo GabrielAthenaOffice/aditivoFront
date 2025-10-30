@@ -7,7 +7,7 @@ const baseURL = 'https://api-aditivo.onrender.com';
 
 
 export const api = axios.create({
-  baseURL,
+  baseURL: "/api" , // <- USAR PROXY DO VITE
   withCredentials: true,            // <- LIGA ISSO
 })
 
