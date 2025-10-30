@@ -5,7 +5,7 @@ import { useDeleteAditivo } from '@/hooks/useAditivo' // ← singular
 import { Trash2 } from 'lucide-react'
 
 const buildDownloadUrl = (id: string): string => {
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api-aditivo.onrender.com';
   const path = ADITIVOS_DOWNLOAD(id)
   const cleanBaseUrl = baseUrl.replace(/\/$/, '')
   const cleanPath = path.startsWith('/') ? path : `/${path}`

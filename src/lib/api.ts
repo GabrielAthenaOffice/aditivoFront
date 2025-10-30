@@ -3,7 +3,8 @@
 // ========================================
 import axios from 'axios'
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api-aditivo.onrender.com';
+
 
 export const api = axios.create({
   baseURL,

@@ -46,7 +46,7 @@ const formatPhoneBR = (v: string = '') => {
 function buildDownloadUrl(url: string): string {
   if (!url) return ''
   if (url.startsWith('http')) return url
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api-aditivo.onrender.com';
   const cleanBaseUrl = baseUrl.replace(/\/$/, '')
   const cleanPath = url.startsWith('/') ? url.slice(1) : url
   return `${cleanBaseUrl}/${cleanPath}`

@@ -7,6 +7,7 @@ import { AuthProvider } from '@/features/auth/useAuth'
 import router from './router'
 import './styles/tailwind.css'
 
+
 const qc = new QueryClient()
 
 createRoot(document.getElementById('root')!).render(
