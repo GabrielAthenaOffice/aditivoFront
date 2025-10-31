@@ -134,7 +134,8 @@ export default function AditivoForm({ template }: { template: TemplateKey }) {
       const fullUrl = buildDownloadUrl(downloadUrl);
       setLastDownloadUrl(fullUrl);
       try {
-        await secureDownload(fullUrl, `aditivo_${template}_${Date.now()}.docx`);
+        secureDownload(fullUrl, `aditivo_${template}_${Date.now()}.docx`)
+        .catch((e) => console.error('download falhou', e));
       } catch (e) {
         console.error('download falhou', e);
       }
