@@ -45,25 +45,25 @@ const formatPhoneBR = (v: string = '') => {
    ========================= */
 function buildDownloadUrl(url: string): string {
   const API_BASE = 'https://api-aditivo.onrender.com';
-
   if (!url) return '';
 
   try {
-    // URL absoluta?
-    const u = new URL(url);
+    const u = new URL(url); // absoluta?
     if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
-      u.protocol = 'https:';
-      u.host = new URL(API_BASE).host; // api-aditivo.onrender.com
+      const api = new URL(API_BASE);
+      u.protocol = api.protocol;
+      u.host = api.host;
       return u.toString();
     }
-    return url; // já é absoluta e válida
+    return url; // já é absoluta válida
   } catch {
-    // URL relativa -> junta com a base
+    // relativa -> junta com a base
     const cleanBase = API_BASE.replace(/\/$/, '');
     const cleanPath = url.startsWith('/') ? url.slice(1) : url;
     return `${cleanBase}/${cleanPath}`;
   }
 }
+
 
 
 /* 👇 NOVO: baixa autenticado, sem nova aba */
