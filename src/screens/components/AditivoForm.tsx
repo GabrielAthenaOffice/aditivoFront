@@ -46,7 +46,7 @@ const formatPhoneBR = (v: string = '') => {
 function buildDownloadUrl(url: string): string {
   if (!url) return ''
   if (url.startsWith('http')) return url
-  const baseUrl ='https://api-aditivo.onrender.com';
+  const baseUrl = 'https://api-aditivo.onrender.com';
   const cleanBaseUrl = baseUrl.replace(/\/$/, '')
   const cleanPath = url.startsWith('/') ? url.slice(1) : url
   return `${cleanBaseUrl}/${cleanPath}`
