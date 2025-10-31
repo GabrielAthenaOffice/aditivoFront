@@ -68,22 +68,31 @@ function buildDownloadUrl(url: string): string {
 
 /* 👇 NOVO: baixa autenticado, sem nova aba */
 async function secureDownload(url: string, filename = 'aditivo.docx') {
-  const res = await fetch(url, { method: 'GET', credentials: 'include' });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort('timeout'), 20000);
+  try {
+    const res = await fetch(url, { method: 'GET', credentials: 'include', signal: ac.signal });
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('AUTH'); // força UI a pedir novo login
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const dispo = res.headers.get('Content-Disposition') || '';
+    const m = dispo.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+    const suggested = m ? decodeURIComponent(m[1].replace(/"/g, '')) : null;
 
-  const dispo = res.headers.get('Content-Disposition') || '';
-  const m = dispo.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
-  const suggested = m ? decodeURIComponent(m[1].replace(/"/g, '')) : null;
-
-  const blob = await res.blob();
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = suggested || filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(a.href);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = suggested || filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(a.href);
+  } finally {
+    clearTimeout(timer);
+  }
 }
+
 
 /* =========================
    Componente
@@ -132,6 +141,7 @@ export default function AditivoForm({ template }: { template: TemplateKey }) {
       const downloadUrl = data.urlDownload || data.downloadUrl;
       if (!downloadUrl) return;
       const fullUrl = buildDownloadUrl(downloadUrl);
+      console.log('download (corrigida):', fullUrl); // 👈 verifique que virou api-aditivo.onrender.com
       setLastDownloadUrl(fullUrl);
       try {
         secureDownload(fullUrl, `aditivo_${template}_${Date.now()}.docx`)
