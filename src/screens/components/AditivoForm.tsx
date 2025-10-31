@@ -44,13 +44,27 @@ const formatPhoneBR = (v: string = '') => {
    Helpers de URL/Download
    ========================= */
 function buildDownloadUrl(url: string): string {
+  const API_BASE = 'https://api-aditivo.onrender.com';
+
   if (!url) return '';
-  if (url.startsWith('http')) return url;
-  const baseUrl = 'https://api-aditivo.onrender.com';
-  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
-  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
-  return `${cleanBaseUrl}/${cleanPath}`;
+
+  try {
+    // URL absoluta?
+    const u = new URL(url);
+    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
+      u.protocol = 'https:';
+      u.host = new URL(API_BASE).host; // api-aditivo.onrender.com
+      return u.toString();
+    }
+    return url; // já é absoluta e válida
+  } catch {
+    // URL relativa -> junta com a base
+    const cleanBase = API_BASE.replace(/\/$/, '');
+    const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+    return `${cleanBase}/${cleanPath}`;
+  }
 }
+
 
 /* 👇 NOVO: baixa autenticado, sem nova aba */
 async function secureDownload(url: string, filename = 'aditivo.docx') {
