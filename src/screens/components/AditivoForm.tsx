@@ -44,28 +44,31 @@ const formatPhoneBR = (v: string = '') => {
    Helpers de URL/Download
    ========================= */
 function buildDownloadUrl(url: string): string {
-  if (!url) return ''
-  if (url.startsWith('http')) return url
-  const baseUrl = 'https://api-aditivo.onrender.com';
-  const cleanBaseUrl = baseUrl.replace(/\/$/, '')
-  const cleanPath = url.startsWith('/') ? url.slice(1) : url
-  return `${cleanBaseUrl}/${cleanPath}`
+  if (!url) return '';
+  if (url.startsWith('http')) return url;
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://api-aditivo.onrender.com';
+  const cleanBaseUrl = baseUrl.replace(/\/$/, '');
+  const cleanPath = url.startsWith('/') ? url.slice(1) : url;
+  return `${cleanBaseUrl}/${cleanPath}`;
 }
 
-const forceDownload = (url: string, filename: string = 'aditivo.docx') => {
-  const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
-  setTimeout(() => {
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      link.target = '_blank'
-      link.rel = 'noopener noreferrer'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    }
-  }, 500)
+/* 👇 NOVO: baixa autenticado, sem nova aba */
+async function secureDownload(url: string, filename = 'aditivo.docx') {
+  const res = await fetch(url, { method: 'GET', credentials: 'include' });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  const dispo = res.headers.get('Content-Disposition') || '';
+  const m = dispo.match(/filename\*?=(?:UTF-8''|")?([^";]+)/i);
+  const suggested = m ? decodeURIComponent(m[1].replace(/"/g, '')) : null;
+
+  const blob = await res.blob();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = suggested || filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
 }
 
 /* =========================
@@ -102,30 +105,35 @@ export default function AditivoForm({ template }: { template: TemplateKey }) {
     }
   }, [unidadeInfo, setValue])
 
+  
   const mutation = useMutation({
-    mutationFn: async (payload: AditivoRequestDTO) => {
-      const res = await api.post<AditivoResponseDTO>(endpoint, { 
-        ...payload, 
-        templateNome: template 
-      })
-      return res.data
-    },
-    onSuccess: (data) => {
-      const downloadUrl = data.urlDownload || data.downloadUrl
-      if (!downloadUrl) return
-      const fullUrl = buildDownloadUrl(downloadUrl)
-      setLastDownloadUrl(fullUrl)
-      setTimeout(() => {
-        forceDownload(fullUrl, `aditivo_${template}_${Date.now()}.docx`)
-      }, 800)
+  mutationFn: async (payload: AditivoRequestDTO) => {
+    const res = await api.post<AditivoResponseDTO>(endpoint, { 
+      ...payload, 
+      templateNome: template 
+    });
+    return res.data;
+  },
+    onSuccess: async (data) => {
+      const downloadUrl = data.urlDownload || data.downloadUrl;
+      if (!downloadUrl) return;
+      const fullUrl = buildDownloadUrl(downloadUrl);
+      setLastDownloadUrl(fullUrl);
+      try {
+        await secureDownload(fullUrl, `aditivo_${template}_${Date.now()}.docx`);
+      } catch (e) {
+        console.error('download falhou', e);
+      }
     },
     onError: (error: any) => {
-      console.error('erro:', error?.response?.data || error)
+      console.error('erro:', error?.response?.data || error);
     }
-  })
+  });
+
+  const handleManualDownload = () => lastDownloadUrl && secureDownload(lastDownloadUrl);
+
 
   const onSubmit = (data: AditivoRequestDTO) => mutation.mutate(data)
-  const handleManualDownload = () => lastDownloadUrl && forceDownload(lastDownloadUrl)
 
   // campos mascarados
   const unidadeCnpj = watch('unidadeCnpj') || ''
