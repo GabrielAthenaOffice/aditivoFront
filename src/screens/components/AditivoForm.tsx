@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { schemas } from '@/schemas'
 import { AditivoRequestDTO, AditivoResponseDTO, TemplateKey } from '@/types'
 import { useMutation } from '@tanstack/react-query'
+import { useSecureDownload } from '@/hooks/useSecureDownload'
 import { api } from '@/lib/api'
 import { ENDPOINTS } from '@/constants'
 import { useMemo, useState, useEffect } from 'react'
@@ -45,25 +46,24 @@ const formatPhoneBR = (v: string = '') => {
    ========================= */
 function buildDownloadUrl(url: string): string {
   const API_BASE = 'https://api-aditivo.onrender.com';
-  if (!url) return '';
 
   try {
-    const u = new URL(url); // absoluta?
-    if (u.hostname === 'localhost' || u.hostname === '127.0.0.1') {
-      const api = new URL(API_BASE);
-      u.protocol = api.protocol;
-      u.host = api.host;
-      return u.toString();
-    }
-    return url; // já é absoluta válida
+    // resolve relativa com base e parse absoluta também
+    const u = new URL(url, API_BASE);
+    const base = new URL(API_BASE);
+
+    // força a origem da API e remove porta herdada
+    u.protocol = base.protocol;
+    u.hostname = base.hostname;
+    u.port = ''; // 👈 remove :5000 se tiver
+    return u.toString();
   } catch {
-    // relativa -> junta com a base
+    // fallback simples
     const cleanBase = API_BASE.replace(/\/$/, '');
     const cleanPath = url.startsWith('/') ? url.slice(1) : url;
     return `${cleanBase}/${cleanPath}`;
   }
 }
-
 
 
 /* 👇 NOVO: baixa autenticado, sem nova aba */
@@ -99,6 +99,8 @@ async function secureDownload(url: string, filename = 'aditivo.docx') {
    ========================= */
 export default function AditivoForm({ template }: { template: TemplateKey }) {
   const schema = schemas[template] as any
+
+  const { download: secureDownload, isDownloading: downloadInProgress } = useSecureDownload()
   const [lastDownloadUrl, setLastDownloadUrl] = useState<string>('')
 
   const { register, handleSubmit, formState: { errors }, setValue, watch } =
@@ -129,34 +131,36 @@ export default function AditivoForm({ template }: { template: TemplateKey }) {
   }, [unidadeInfo, setValue])
 
 
-  const mutation = useMutation({
-  mutationFn: async (payload: AditivoRequestDTO) => {
-    const res = await api.post<AditivoResponseDTO>(endpoint, { 
-      ...payload, 
-      templateNome: template 
-    });
-    return res.data;
-  },
+   const mutation = useMutation({
+    mutationFn: async (payload: AditivoRequestDTO) => {
+      const res = await api.post<AditivoResponseDTO>(endpoint, { 
+        ...payload, 
+        templateNome: template 
+      });
+      return res.data;
+    },
     onSuccess: async (data) => {
       const downloadUrl = data.urlDownload || data.downloadUrl;
       if (!downloadUrl) return;
+      
       const fullUrl = buildDownloadUrl(downloadUrl);
-      console.log('download (corrigida):', fullUrl); // 👈 verifique que virou api-aditivo.onrender.com
       setLastDownloadUrl(fullUrl);
-      try {
-        secureDownload(fullUrl, `aditivo_${template}_${Date.now()}.docx`)
-        .catch((e) => console.error('download falhou', e));
-      } catch (e) {
-        console.error('download falhou', e);
-      }
+      
+      // Download automático
+      const filename = `aditivo_${template}_${Date.now()}.docx`
+      await secureDownload(fullUrl, filename)
     },
     onError: (error: any) => {
       console.error('erro:', error?.response?.data || error);
     }
   });
 
-  const handleManualDownload = () => lastDownloadUrl && secureDownload(lastDownloadUrl);
-
+  const handleManualDownload = () => {
+    if (lastDownloadUrl) {
+      const filename = `aditivo_${template}_${Date.now()}.docx`
+      secureDownload(lastDownloadUrl, filename)
+    }
+  }
 
   const onSubmit = (data: AditivoRequestDTO) => mutation.mutate(data)
 
@@ -395,15 +399,22 @@ export default function AditivoForm({ template }: { template: TemplateKey }) {
 
       {/* Botões */}
       <div className="flex flex-col sm:flex-row gap-3 pt-4">
-        <button type="submit" disabled={mutation.isPending}
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-          {mutation.isPending ? '⏳ Gerando...' : '🚀 Gerar Aditivo'}
+        <button 
+          type="submit" 
+          disabled={mutation.isPending || downloadInProgress}
+          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {mutation.isPending ? '⏳ Gerando...' : downloadInProgress ? '📥 Baixando...' : '🚀 Gerar Aditivo'}
         </button>
 
         {mutation.isSuccess && lastDownloadUrl && (
-          <button type="button" onClick={handleManualDownload}
-            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors">
-            📥 Baixar Novamente
+          <button 
+            type="button" 
+            onClick={handleManualDownload}
+            disabled={downloadInProgress}
+            className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50"
+          >
+            {downloadInProgress ? '⏳ Baixando...' : '📥 Baixar Novamente'}
           </button>
         )}
       </div>
